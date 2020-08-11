@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" integrity="sha384-JcKb8q3iqJ61gNV9KGb8thSsNjpSL0n8PARn9HuZOnIxN0hoP+VmmDGMN5t9UJ0Z" crossorigin="anonymous">
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js" integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js" integrity="sha384-9/reFTGAW83EW2RDu2S0VKaIzap3H66lZH81PoYlFhbGU+6BZp6G7niu735Sk7lN" crossorigin="anonymous"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js" integrity="sha384-B4gt1jrGC7Jh4AgTPSdUtOBvfO8shuf57BaghqFfPlYxofvL8/KUEfYiJOMMV+rV" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.19.2/axios.min.js" integrity="sha512-VZ6m0F78+yo3sbu48gElK4irv2dzPoep8oo9LEjxviigcnnnNvnTOJRSrIhuFk68FMLOpiNz+T77nNY89rnWDg==" crossorigin="anonymous"></script>
+    <title>Welcome to Authenticator</title>
+    <style>
+        html, body{
+            height: 100%;
+            width: 100%;
+            background-color: #263238;
+            text-align: center;
+        }
+        .collapse, .card-body{
+            background-color: #37474f;
+            text-align: left;
+            color:#fff;
+        }
+    </style>
+</head>
+<body>
+    <div class="jumbotron jumbotron-fluid">
+        <div class="container">
+        <h1 class="display-4">Authenticator 2.0</h1>
+        <p class="lead">Authenticator 2.0 is designed to test OAuth and SAML flows. This app offers a lot of settings to play around and test your OAuth flows live.</p>
+        </div>
+    </div>
+
+    <div class="btn-group" role="group" aria-label="Basic example">
+        <button type="button" class="btn btn-secondary" id="auth-code-btn">Authorization Code Grant</button>
+        <button type="button" class="btn btn-dark" id="implicit-btn">Implicant Grant</button>
+        <button type="button" class="btn btn-secondary" id="client-credentials-btn">Client Credentials Grant</button>
+        <button type="button" class="btn btn-dark" id="resource-owner-btn">Resource Owner Credentials Grant</button>
+        <button type="button" class="btn btn-danger" data-toggle="collapse" data-target="#collapseExample" aria-expanded="false" aria-controls="collapseExample">Configure</button>
+    </div>
+
+    <div class="collapse" id="collapseExample">
+        <div class="card card-body">
+            <form id="configure-idp" method="POST" action="/saveConfigure">
+                <div class="form-group row">
+                  <label for="client_id_input" class="col-sm-2 col-form-label">Client ID</label>
+                  <div class="col-sm-10">
+                    <input type="text" class="form-control" id="client_id_input" placeholder="Enter your Client ID">
+                  </div>
+                </div>
+                <div class="form-group row">
+                  <label for="client_secret_input" class="col-sm-2 col-form-label">Client Secret</label>
+                  <div class="col-sm-10">
+                    <input type="text" class="form-control" id="client_secret_input" placeholder="Enter your client secret">
+                  </div>
+                </div>
+                <fieldset class="form-group">
+                  <div class="row">
+                    <legend class="col-form-label col-sm-2 pt-0">Discovery Endpoints</legend>
+                    <div class="col-sm-10">
+                        <div class="form-group row">
+                            <label for="auth_endpoint_input" class="col-sm-2 col-form-label">Authorization Endpoint</label>
+                            <div class="col-sm-10">
+                              <input type="url" class="form-control" id="auth_endpoint_input" placeholder="https://{myIdP.com}/oauth/authorize">
+                            </div>
+                        </div>
+                        <div class="form-group row">
+                            <label for="token_endpoint_input" class="col-sm-2 col-form-label">Token Endpoint</label>
+                            <div class="col-sm-10">
+                              <input type="url" class="form-control" id="token_endpoint_input" placeholder="https://{myIdP.com}/oauth/token">
+                            </div>
+                        </div>
+                        <div class="form-group row">
+                            <label for="userInfo_endpoint_input" class="col-sm-2 col-form-label">UserInfo Endpoint</label>
+                            <div class="col-sm-10">
+                              <input type="url" class="form-control" id="userInfo_endpoint_input" placeholder="https://{myIdP.com}/oauth/userInfo">
+                            </div>
+                        </div>
+                    </div>
+                  </div>
+                </fieldset>
+                <div class="form-group row">
+                  <div class="col-sm-10">
+                    <button type="submit" class="btn btn-warning" id="save-configure-btn">Save Configuration</button>
+                  </div>
+                </div>
+              </form>
+        </div>
+    </div>
+
+    <script>
+        window.onload = () => {
+            if(localStorage.getItem("idpDetails") === "true"){
+                document.getElementById('client_id_input').value = localStorage.getItem("clientId");
+                document.getElementById('client_secret_input').value = localStorage.getItem("clientSecret");
+                document.getElementById('auth_endpoint_input').value = localStorage.getItem("authEndpoint");
+                document.getElementById('token_endpoint_input').value = localStorage.getItem("tokenEndpoint");
+                document.getElementById('userInfo_endpoint_input').value = localStorage.getItem("userInfoEndpoint");
+            }
+        };
+
+        var saveBtn = document.getElementById('save-configure-btn').addEventListener('click', (e)=>{
+            e.preventDefault();
+            localStorage.setItem("clientId", document.getElementById('client_id_input').value);
+            localStorage.setItem("clientSecret", document.getElementById('client_secret_input').value);
+            localStorage.setItem("authEndpoint", document.getElementById('auth_endpoint_input').value);
+            localStorage.setItem("tokenEndpoint", document.getElementById('token_endpoint_input').value);
+            localStorage.setItem("userInfoEndpoint", document.getElementById('userInfo_endpoint_input').value);
+            localStorage.setItem("idpDetails", "true");
+            axios.post('/saveConfigure', {
+                client_id: localStorage.getItem("clientId"),
+                client_secret: localStorage.getItem("clientSecret"),
+                authEndpoint: localStorage.getItem("authEndpoint"),
+                tokenEndpoint: localStorage.getItem("tokenEndpoint"),
+                userInfoEndpoint: localStorage.getItem("userInfoEndpoint")
+            })
+            .then((res) => {
+                console.log(res);
+                if(res.status === 200){
+                    //alert('OAuth Configuration Saved Successfully!');
+                    // Create a div and set class
+                    var successAlert = document.createElement("div");
+                    successAlert.setAttribute("class", "alert alert-dark");
+                    successAlert.setAttribute("role", "alert");
+                    // Add some text
+                    successAlert.appendChild(document.createTextNode("OAuth Configuration Saved Successfully!"));
+                    // Add it to the document body
+                    document.body.appendChild(successAlert);
+                }
+            })
+            .catch(err => console.log(err));
+        });
+
+        var authCode = document.getElementById('auth-code-btn').addEventListener('click', ()=>{
+            window.location.assign("http://localhost:8080/authCode");
+        });
+
+        var implicit = document.getElementById('implicit-btn').addEventListener('click', ()=>{
+            window.location.assign("http://localhost:8080/implicit");
+        });
+
+        var implicit = document.getElementById('client-credentials-btn').addEventListener('click', ()=>{
+            window.location.assign("http://localhost:8080/clientCredentials");
+        });
+
+        var implicit = document.getElementById('resource-owner-btn').addEventListener('click', ()=>{
+            window.location.assign("http://localhost:8080/resourceOwner");
+        });
+    </script>
+    
+</body>
+</html>
