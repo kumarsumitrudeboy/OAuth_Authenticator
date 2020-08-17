@@ -23,7 +23,7 @@ function(profile, done) {
     // }
     // return done(null, user);
     // });
-    console.log(profile);
+    //console.log(profile);
     return done(null, profile);
 })
 );
@@ -207,11 +207,25 @@ app.get('/login',
   }
 );
 
+app.get('/home', (req, res) => {
+    let samlResponse;
+    if(req.params.saml){
+        samlResponse = req.params.saml;
+        res.send(samlResponse);
+    }else{
+        res.status(400).send('Bad Request: Missing SAML Response');
+    }
+}
+  
+);
+
 app.post('/login/callback',
   bodyParser.urlencoded({ extended: false }),
   passport.authenticate('saml', { failureRedirect: '/', failureFlash: true }),
   function(req, res) {
-    res.redirect('/');
+      //console.log(req.user);
+      //console.log(req.body.done);
+        res.json(req.user);
   }
 );
 
