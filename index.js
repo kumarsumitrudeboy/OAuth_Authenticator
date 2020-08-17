@@ -5,6 +5,39 @@ var bodyParser = require('body-parser');
 var fs = require('fs');
 var url = require('url');
 var axios = require('axios');
+var passport = require('passport');
+var Saml2js = require('saml2js');
+var SamlStrategy = require('passport-saml').Strategy;
+
+//SAML Strategy
+var saml = passport.use(new SamlStrategy(
+{
+    path: '/login/callback',
+    entryPoint: 'https://sso.connect.pingidentity.com/sso/idp/SSO.saml2?idpid=9caac226-aad4-4f6e-8297-225d8b8917d1',
+    issuer: 'demo-app'
+},
+function(profile, done) {
+    // findByEmail(profile.email, function(err, user) {
+    // if (err) {
+    //     return done(err);
+    // }
+    // return done(null, user);
+    // });
+    console.log(profile);
+    return done(null, profile);
+})
+);
+
+app.use(passport.initialize());
+app.use(passport.session());
+
+passport.serializeUser((user, done) => {
+	done(null, user);
+});
+
+passport.deserializeUser((user, done) => {
+	done(null, user);
+});
 
 // create application/json parser
 var jsonParser = bodyParser.json();
@@ -166,6 +199,21 @@ app.get('/clientCredentials', (req, res) => {
         }
     });
 });
+
+app.get('/login',
+  passport.authenticate('saml', { failureRedirect: '/', failureFlash: true }),
+  function(req, res) {
+    res.redirect('/');
+  }
+);
+
+app.post('/login/callback',
+  bodyParser.urlencoded({ extended: false }),
+  passport.authenticate('saml', { failureRedirect: '/', failureFlash: true }),
+  function(req, res) {
+    res.redirect('/');
+  }
+);
 
 app.listen(8080, ()=> {
     console.log('Server is up and listening on port 8080');
